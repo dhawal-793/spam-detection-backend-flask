@@ -1,0 +1,7 @@
+Flask
+Gunicorn
+numpy
+nltk
+scikit-learn
+Flask-Cors
+python-dotenv
