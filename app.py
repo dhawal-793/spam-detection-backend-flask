@@ -33,7 +33,7 @@ def transform_email(text):
     text = text.translate(str.maketrans("", "", string.punctuation)).split()
     text = [ps.stem(word) for word in text if word not in stopwords_set]
     text = " ".join(text)
-    return [text]
+    return text
 
 
 def transform_text(text):
@@ -62,7 +62,7 @@ def home():
 
 @app.route("/api/predict-email", methods=["POST"])
 def predict_email():
-    transformed_email = transform_text(request.json["email"])
+    transformed_email = transform_email(request.json["email"])
     vector_input = email_cv.transform([transformed_email])
     result = email_model.predict(vector_input)[0]
     return (
@@ -72,11 +72,11 @@ def predict_email():
 
 @app.route("/api/predict-message", methods=["POST"])
 def predict_message():
-    transformed_sms = transform_email(request.json["message"])
-    vector_input = email_cv.transform([transformed_sms])
+    transformed_sms = transform_text(request.json["message"])
+    vector_input = message_tfidf.transform([transformed_sms])
     result = message_model.predict(vector_input)[0]
     return (
-        jsonify({"result": "Spam"}) if result == 1 else jsonify({"result": "NotSpam"})
+        jsonify({"result": "Spam"}) if result == 1 else jsonify({"result": "Not Spam"})
     )
 
 
