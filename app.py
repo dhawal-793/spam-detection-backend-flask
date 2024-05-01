@@ -66,7 +66,7 @@ def predict_email():
     vector_input = email_cv.transform([transformed_email])
     result = email_model.predict(vector_input)[0]
     return (
-        jsonify({"result": "Spam"}) if result == 1 else jsonify({"result": "NotSpam"})
+        jsonify({"result": "Spam"}) if result == 1 else jsonify({"result": "Not Spam"})
     )
 
 
@@ -80,5 +80,5 @@ def predict_message():
     )
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# if __name__ == "__main__":
+#     app.run(debug=True)
