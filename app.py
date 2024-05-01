@@ -13,20 +13,28 @@ FRONTEND_DEV = environ["FRONTEND_DEV"]
 app = Flask(__name__)
 CORS(
     app,
-    resources={
-        r"/api/predict": {
-            "origins": [FRONTEND,FRONTEND_DEV]
-        }
-    },
+    resources={r"/api/predict/*": {"origins": [FRONTEND, FRONTEND_DEV]}},
 )
 
-tfidf = pickle.load(open("myvectorizer.pkl", "rb"))
-model = pickle.load(open("mymodel.pkl", "rb"))
+email_cv = pickle.load(open("emailvectorizer.pkl", "rb"))
+email_model = pickle.load(open("emailmodel.pkl", "rb"))
+message_tfidf = pickle.load(open("messagevectorizer.pkl", "rb"))
+message_model = pickle.load(open("messagemodel.pkl", "rb"))
 
 nltk.download("punkt")
 nltk.download("stopwords")
 
 ps = PorterStemmer()
+
+
+def transform_email(text):
+    stopwords_set = set(stopwords.words("english"))
+    text = text.lower()
+    text = text.translate(str.maketrans("", "", string.punctuation)).split()
+    text = [ps.stem(word) for word in text if word not in stopwords_set]
+    text = " ".join(text)
+    return [text]
+
 
 def transform_text(text):
     text = text.lower()
@@ -52,10 +60,25 @@ def home():
     return jsonify({"message": "Hello form server"})
 
 
-@app.route("/api/predict", methods=["POST"])
-def predict():
-    transformed_sms = transform_text(request.json["message"])
-    vector_input = tfidf.transform([transformed_sms])
-    result = model.predict(vector_input)[0]
-    return jsonify({"result": "Spam"}) if result==1 else jsonify({"result": "NotSpam"})
+@app.route("/api/predict-email", methods=["POST"])
+def predict_email():
+    transformed_email = transform_text(request.json["email"])
+    vector_input = email_cv.transform([transformed_email])
+    result = email_model.predict(vector_input)[0]
+    return (
+        jsonify({"result": "Spam"}) if result == 1 else jsonify({"result": "NotSpam"})
+    )
 
+
+@app.route("/api/predict-message", methods=["POST"])
+def predict_message():
+    transformed_sms = transform_email(request.json["message"])
+    vector_input = email_cv.transform([transformed_sms])
+    result = message_model.predict(vector_input)[0]
+    return (
+        jsonify({"result": "Spam"}) if result == 1 else jsonify({"result": "NotSpam"})
+    )
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
